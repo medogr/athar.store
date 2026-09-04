@@ -70,7 +70,7 @@ const Athar = (() => {
               <ul>
                 <li><a href="index.html#offers">العروض</a></li>
                 <li><a href="checkout.html">اطلب الآن</a></li>
-                <li><a href="https://wa.me/2010XXXXXXXX" target="_blank" rel="noopener">تواصل واتساب</a></li>
+                <li><a href="https://wa.me/201027540140" target="_blank" rel="noopener">تواصل واتساب</a></li>
               </ul>
             </div>
           </div>
