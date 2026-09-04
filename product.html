@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>المنتج | أثر</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-product">
+
+  <div id="site-header"></div>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="مسار التصفح" id="crumbs">
+          <a href="index.html">الرئيسية</a>
+        </nav>
+
+        <div class="product-layout" id="productLayout">
+          <div class="gallery">
+            <div class="skeleton" style="aspect-ratio:1/1"></div>
+          </div>
+          <div class="product-info">
+            <div class="skeleton" style="height:28px;width:60%"></div>
+            <div class="skeleton" style="height:48px;width:80%;margin-top:14px"></div>
+            <div class="skeleton" style="height:20px;width:40%;margin-top:14px"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="relatedSection" hidden>
+      <div class="container">
+        <div class="section-head">
+          <div><span class="eyebrow">قد يعجبك أيضًا</span><h2>منتجات مشابهة</h2></div>
+        </div>
+        <div class="grid products-grid" id="relatedGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+  <script>
+    (async () => {
+      Athar.renderLayout();
+      Athar.initSearch(null); // البحث هنا يحوّل للرئيسية
+
+      const id = new URLSearchParams(location.search).get('id');
+      const layout = document.getElementById('productLayout');
+
+      try {
+        const p = await API.getProduct(id);
+        if (!p) {
+          layout.innerHTML = Athar.emptyState('المنتج غير موجود', 'يمكن اتحذف أو الرابط غلط.');
+          return;
+        }
+        const meta = Athar.categoryMeta(p.category);
+        document.title = `${p.name} | أثر`;
+        document.getElementById('crumbs').innerHTML =
+          `<a href="index.html">الرئيسية</a><span>/</span><a href="category.html?cat=${encodeURIComponent(p.category)}">${Athar.esc(meta.label)}</a><span>/</span><b>${Athar.esc(p.name)}</b>`;
+
+        const images = p.images.length ? p.images : [Athar.PLACEHOLDER];
+        const thumbs = images.length > 1
+          ? `<div class="thumbs">${images.map((src, i) => `<button class="thumb ${i === 0 ? 'is-active' : ''}" data-src="${Athar.esc(src)}"><img src="${Athar.esc(src)}" alt="" onerror="this.src=Athar.PLACEHOLDER"></button>`).join('')}</div>`
+          : '';
+
+        layout.innerHTML = `
+          <div class="gallery">
+            <div class="gallery-main">
+              ${p.hasOffer ? `<span class="badge">خصم ${p.discountPct}%</span>` : ''}
+              ${!p.available ? `<span class="badge badge-out">غير متاح حاليًا</span>` : ''}
+              <img id="mainImg" src="${Athar.esc(images[0])}" alt="${Athar.esc(p.name)}" onerror="this.src=Athar.PLACEHOLDER">
+            </div>
+            ${thumbs}
+          </div>
+
+          <div class="product-info">
+            <a class="product-cat" href="category.html?cat=${encodeURIComponent(p.category)}">${meta.icon} ${Athar.esc(meta.label)}</a>
+            <h1>${Athar.esc(p.name)}</h1>
+
+            <div class="price-row price-row-lg">
+              <span class="price">${Athar.fmt(p.finalPrice)}</span>
+              ${p.hasOffer ? `<span class="price-old">${Athar.fmt(p.price)}</span><span class="save">وفّر ${Athar.fmt(p.price - p.finalPrice)}</span>` : ''}
+            </div>
+
+            <p class="product-desc">${Athar.esc(p.description || 'منتج من مجموعة أثر، مصنوع بخامات مختارة بعناية.').replace(/\n/g, '<br>')}</p>
+
+            <div class="stock ${p.available ? 'in' : 'out'}">
+              <i></i>${p.available ? 'متاح في المخزون' : 'غير متاح حاليًا'}
+            </div>
+
+            <div class="order-box">
+              <label class="qty-label">الكمية</label>
+              <div class="qty">
+                <button type="button" id="qtyMinus" aria-label="تقليل">−</button>
+                <input type="number" id="qtyInput" min="1" max="50" value="1">
+                <button type="button" id="qtyPlus" aria-label="زيادة">+</button>
+              </div>
+              <a id="orderBtn" class="btn btn-primary btn-lg ${p.available ? '' : 'is-disabled'}" href="checkout.html?id=${p.id}&qty=1">اطلب الآن</a>
+            </div>
+
+            <ul class="assurances">
+              <li>الدفع عند الاستلام</li>
+              <li>توصيل خلال 2–5 أيام عمل</li>
+              <li>تغليف آمن ومناسب للإهداء</li>
+            </ul>
+          </div>`;
+
+        // الصور المصغرة
+        document.querySelectorAll('.thumb').forEach(btn => btn.addEventListener('click', () => {
+          document.querySelectorAll('.thumb').forEach(b => b.classList.remove('is-active'));
+          btn.classList.add('is-active');
+          document.getElementById('mainImg').src = btn.dataset.src;
+        }));
+
+        // الكمية
+        const qtyInput = document.getElementById('qtyInput');
+        const orderBtn = document.getElementById('orderBtn');
+        const syncQty = () => {
+          let v = parseInt(qtyInput.value, 10); if (!v || v < 1) v = 1; if (v > 50) v = 50;
+          qtyInput.value = v;
+          orderBtn.href = `checkout.html?id=${p.id}&qty=${v}`;
+        };
+        document.getElementById('qtyMinus').onclick = () => { qtyInput.value = +qtyInput.value - 1; syncQty(); };
+        document.getElementById('qtyPlus').onclick = () => { qtyInput.value = +qtyInput.value + 1; syncQty(); };
+        qtyInput.addEventListener('input', syncQty);
+        if (!p.available) orderBtn.addEventListener('click', e => { e.preventDefault(); Athar.toast('المنتج غير متاح حاليًا', 'error'); });
+
+        // منتجات مشابهة
+        const all = await API.getProducts();
+        const related = all.filter(x => x.category === p.category && x.id !== p.id).slice(0, 4);
+        if (related.length) {
+          document.getElementById('relatedSection').hidden = false;
+          document.getElementById('relatedGrid').innerHTML = related.map(Athar.productCard).join('');
+        }
+      } catch (err) {
+        console.error(err);
+        layout.innerHTML = Athar.emptyState('تعذّر تحميل المنتج', 'اتأكد من رابط الـ API في api.js.');
+      }
+    })();
+  </script>
+</body>
+</html>

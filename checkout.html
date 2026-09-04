@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إتمام الطلب | أثر</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-checkout">
+
+  <div id="site-header"></div>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <span class="eyebrow">خطوة واحدة وخلاص</span>
+        <h1>إتمام الطلب</h1>
+        <p class="lead">املأ بياناتك وهنتواصل معاك لتأكيد الطلب. الدفع عند الاستلام.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container checkout-layout">
+
+        <!-- الفورم -->
+        <form class="card form-card" id="orderForm" novalidate>
+          <h2 class="card-title">بيانات التوصيل</h2>
+
+          <div class="field">
+            <label for="customerName">الاسم بالكامل</label>
+            <input id="customerName" name="customerName" type="text" placeholder="مثال: سارة أحمد" required minlength="3" />
+            <small class="error"></small>
+          </div>
+
+          <div class="field">
+            <label for="phone">رقم الهاتف</label>
+            <input id="phone" name="phone" type="tel" inputmode="numeric" placeholder="01xxxxxxxxx" required dir="ltr" />
+            <small class="error"></small>
+          </div>
+
+          <div class="field">
+            <label for="address">العنوان بالتفصيل</label>
+            <textarea id="address" name="address" rows="3" placeholder="المحافظة – المدينة – الشارع – رقم العمارة والشقة" required minlength="10"></textarea>
+            <small class="error"></small>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="product">المنتج</label>
+              <select id="product" name="product" required>
+                <option value="">جارٍ التحميل…</option>
+              </select>
+              <small class="error"></small>
+            </div>
+            <div class="field field-qty">
+              <label for="quantity">الكمية</label>
+              <input id="quantity" name="quantity" type="number" min="1" max="50" value="1" required />
+              <small class="error"></small>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">
+            <span class="btn-text">تأكيد الطلب</span>
+            <span class="btn-loader" aria-hidden="true"></span>
+          </button>
+          <p class="form-hint">بالضغط على تأكيد الطلب، هيتم تسجيل طلبك مباشرة وهنتواصل معاك خلال 24 ساعة.</p>
+        </form>
+
+        <!-- ملخص الطلب -->
+        <aside class="card summary-card" id="summary">
+          <h2 class="card-title">ملخص الطلب</h2>
+          <div class="summary-product" id="summaryProduct">
+            <div class="skeleton" style="width:80px;height:80px;border-radius:12px"></div>
+            <div style="flex:1"><div class="skeleton" style="height:18px;width:70%"></div><div class="skeleton" style="height:14px;width:40%;margin-top:8px"></div></div>
+          </div>
+          <dl class="summary-lines">
+            <div><dt>سعر الوحدة</dt><dd id="sumUnit">—</dd></div>
+            <div><dt>الكمية</dt><dd id="sumQty">1</dd></div>
+            <div><dt>الشحن</dt><dd>يُحدد عند التأكيد</dd></div>
+            <div class="total"><dt>الإجمالي</dt><dd id="sumTotal">—</dd></div>
+          </dl>
+          <div class="summary-note">✔ الدفع عند الاستلام &nbsp;·&nbsp; ✔ تغليف آمن</div>
+        </aside>
+
+        <!-- رسالة النجاح -->
+        <div class="card success-card" id="successCard" hidden>
+          <div class="success-icon">✓</div>
+          <h2>تم تسجيل طلبك بنجاح!</h2>
+          <p>رقم طلبك هو <b id="orderNo" dir="ltr"></b><br>هنتواصل معاك على رقمك لتأكيد الطلب وتفاصيل الشحن.</p>
+          <div class="hero-actions">
+            <a href="index.html" class="btn btn-primary">ارجع للرئيسية</a>
+            <a href="checkout.html" class="btn btn-ghost">طلب جديد</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+  <script>
+    (async () => {
+      Athar.renderLayout();
+      Athar.initSearch(null);
+
+      const params = new URLSearchParams(location.search);
+      const preId = params.get('id');
+      const preQty = Math.max(1, parseInt(params.get('qty') || '1', 10) || 1);
+
+      const form = document.getElementById('orderForm');
+      const select = document.getElementById('product');
+      const qtyEl = document.getElementById('quantity');
+      qtyEl.value = Math.min(preQty, 50);
+
+      let products = [];
+      const byId = id => products.find(p => String(p.id) === String(id));
+
+      const updateSummary = () => {
+        const p = byId(select.value);
+        const qty = Math.max(1, parseInt(qtyEl.value, 10) || 1);
+        document.getElementById('sumQty').textContent = qty;
+        if (!p) {
+          document.getElementById('summaryProduct').innerHTML = `<p class="muted">اختر منتجًا لعرض الملخص.</p>`;
+          document.getElementById('sumUnit').textContent = '—';
+          document.getElementById('sumTotal').textContent = '—';
+          return;
+        }
+        document.getElementById('summaryProduct').innerHTML = `
+          <img src="${Athar.esc(p.image || Athar.PLACEHOLDER)}" alt="" onerror="this.src=Athar.PLACEHOLDER">
+          <div>
+            <b>${Athar.esc(p.name)}</b>
+            <span class="muted">${Athar.esc(Athar.categoryMeta(p.category).label)}</span>
+            ${p.hasOffer ? `<span class="tag-sale">خصم ${p.discountPct}%</span>` : ''}
+          </div>`;
+        document.getElementById('sumUnit').textContent = Athar.fmt(p.finalPrice);
+        document.getElementById('sumTotal').textContent = Athar.fmt(p.finalPrice * qty);
+      };
+
+      try {
+        products = (await API.getProducts()).filter(p => p.available);
+        select.innerHTML = `<option value="">— اختر المنتج —</option>` +
+          products.map(p => `<option value="${p.id}">${Athar.esc(p.name)} — ${Athar.fmt(p.finalPrice)}</option>`).join('');
+        if (preId && byId(preId)) select.value = preId;
+      } catch (e) {
+        select.innerHTML = `<option value="">تعذّر تحميل المنتجات</option>`;
+      }
+      updateSummary();
+      select.addEventListener('change', updateSummary);
+      qtyEl.addEventListener('input', updateSummary);
+
+      // تحقق بسيط
+      const setErr = (id, msg) => {
+        const field = document.getElementById(id).closest('.field');
+        field.classList.toggle('has-error', !!msg);
+        field.querySelector('.error').textContent = msg || '';
+      };
+      const validate = () => {
+        let ok = true;
+        const name = form.customerName.value.trim();
+        const phone = form.phone.value.replace(/[\s-]/g, '');
+        const address = form.address.value.trim();
+        const qty = parseInt(qtyEl.value, 10);
+        setErr('customerName', name.length < 3 ? 'اكتب اسمك بالكامل' : ''); ok &&= name.length >= 3;
+        setErr('phone', !/^\+?\d{8,15}$/.test(phone) ? 'رقم الهاتف غير صحيح' : ''); ok &&= /^\+?\d{8,15}$/.test(phone);
+        setErr('address', address.length < 10 ? 'اكتب عنوانًا مفصلًا' : ''); ok &&= address.length >= 10;
+        setErr('product', !select.value ? 'اختر المنتج' : ''); ok &&= !!select.value;
+        setErr('quantity', !(qty >= 1 && qty <= 50) ? 'الكمية من 1 إلى 50' : ''); ok &&= qty >= 1 && qty <= 50;
+        return ok;
+      };
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!validate()) return;
+        const p = byId(select.value);
+        const btn = document.getElementById('submitBtn');
+        btn.classList.add('is-loading'); btn.disabled = true;
+        try {
+          const res = await API.createOrder({
+            customerName: form.customerName.value.trim(),
+            phone: form.phone.value.replace(/[\s-]/g, ''),
+            address: form.address.value.trim(),
+            product: p.name,
+            quantity: parseInt(qtyEl.value, 10)
+          });
+          document.getElementById('orderNo').textContent = res.orderNo;
+          form.hidden = true;
+          document.getElementById('summary').hidden = true;
+          document.getElementById('successCard').hidden = false;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          Athar.toast('تم تسجيل طلبك بنجاح 🎉', 'success');
+        } catch (err) {
+          console.error(err);
+          Athar.toast(err.message || 'حصل خطأ أثناء إرسال الطلب، حاول تاني', 'error');
+        } finally {
+          btn.classList.remove('is-loading'); btn.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

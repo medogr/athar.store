@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الفئة | أثر</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-category">
+
+  <div id="site-header"></div>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="مسار التصفح">
+          <a href="index.html">الرئيسية</a><span>/</span><a href="index.html#categories">الفئات</a><span>/</span><b id="crumbCat">…</b>
+        </nav>
+        <span class="eyebrow">فئة</span>
+        <h1 id="catTitle">…</h1>
+        <p class="lead" id="catDesc"></p>
+        <div class="chips" id="catChips"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="resultTitle">كل المنتجات</h2>
+          <span class="section-note" id="resultCount"></span>
+        </div>
+        <div class="grid products-grid" id="productsGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+  <script>
+    (async () => {
+      Athar.renderLayout();
+      const params = new URLSearchParams(location.search);
+      const cat = (params.get('cat') || '').trim();
+      const meta = Athar.categoryMeta(cat);
+
+      document.title = `${meta.label} | أثر`;
+      document.getElementById('crumbCat').textContent = meta.label;
+      document.getElementById('catTitle').textContent = meta.label;
+      document.getElementById('catDesc').textContent = meta.desc || '';
+
+      const grid = document.getElementById('productsGrid');
+      const resultTitle = document.getElementById('resultTitle');
+      const resultCount = document.getElementById('resultCount');
+      grid.innerHTML = Athar.skeletons(8);
+
+      let items = [];
+      const render = (list, q) => {
+        resultTitle.textContent = q ? `نتائج "${q}" في ${meta.label}` : `كل منتجات ${meta.label}`;
+        resultCount.textContent = `${list.length} منتج`;
+        grid.innerHTML = list.length
+          ? list.map(Athar.productCard).join('')
+          : Athar.emptyState('مفيش منتجات هنا', q ? 'جرّب كلمة بحث تانية.' : 'ضيف منتجات للفئة دي في الشيت.');
+      };
+
+      // البحث الحي داخل الفئة
+      Athar.initSearch(q => {
+        q = (q || '').trim().toLowerCase();
+        render(q ? items.filter(p => p.name.toLowerCase().includes(q)) : items, q);
+      });
+
+      try {
+        const [products, categories] = await Promise.all([API.getProducts(), API.getCategories()]);
+        // شرائح للتنقل بين الفئات
+        document.getElementById('catChips').innerHTML = categories.map(c => {
+          const m = Athar.categoryMeta(c.name);
+          return `<a class="chip ${c.name === cat ? 'is-active' : ''}" href="category.html?cat=${encodeURIComponent(c.name)}">${m.icon} ${Athar.esc(m.label)}</a>`;
+        }).join('');
+
+        if (!cat) {
+          resultTitle.textContent = 'اختر فئة';
+          grid.innerHTML = Athar.emptyState('لم يتم تحديد فئة', 'اختر فئة من الشرائح أعلاه.');
+          return;
+        }
+        items = products.filter(p => p.category.toLowerCase() === cat.toLowerCase());
+        render(items, '');
+      } catch (err) {
+        console.error(err);
+        grid.innerHTML = Athar.emptyState('تعذّر تحميل المنتجات', 'اتأكد من رابط الـ API في api.js.');
+      }
+    })();
+  </script>
+</body>
+</html>

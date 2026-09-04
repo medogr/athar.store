@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>أثر | مستلزمات مكتبية بروح</title>
+  <meta name="description" content="أثر — نوت بوك، تو-دو ليست، أقلام، مجات وبوسترات مصممة بعناية لتترك أثرًا في يومك." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-home">
+
+  <div id="site-header"></div>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero hide-on-search">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <span class="eyebrow">مستلزمات مكتبية مصممة بعناية</span>
+          <h1>اترك <em>أثرًا</em><br>في كل صفحة</h1>
+          <p>دفاتر، قوائم مهام، أقلام، مجات وبوسترات… أدوات بسيطة تخلّي يومك أكتر تنظيمًا وجمالًا.</p>
+          <div class="hero-actions">
+            <a href="#categories" class="btn btn-primary btn-lg">تسوّق الآن</a>
+            <a href="#offers" class="btn btn-ghost btn-lg">شوف العروض</a>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-card art-1"><span>✎</span><small>Notebook</small></div>
+          <div class="art-card art-2"><span>☑</span><small>To-Do</small></div>
+          <div class="art-card art-3"><span>☕</span><small>Mug</small></div>
+          <div class="art-stamp">أثر</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- نتائج البحث (تظهر فقط أثناء البحث) -->
+    <section class="section search-section" id="searchSection">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="searchTitle">نتائج البحث</h2>
+          <button class="btn btn-ghost btn-sm" id="clearSearch">مسح البحث ✕</button>
+        </div>
+        <div class="grid products-grid" id="searchGrid"></div>
+      </div>
+    </section>
+
+    <!-- العروض -->
+    <section class="section hide-on-search" id="offers">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">لفترة محدودة</span>
+            <h2>العروض</h2>
+          </div>
+          <span class="section-note" id="offersCount"></span>
+        </div>
+        <div class="grid products-grid" id="offersGrid"></div>
+      </div>
+    </section>
+
+    <!-- الفئات -->
+    <section class="section section-alt hide-on-search" id="categories">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">تصفّح حسب النوع</span>
+            <h2>الفئات</h2>
+          </div>
+        </div>
+        <div class="grid categories-grid" id="categoriesGrid"></div>
+      </div>
+    </section>
+
+    <!-- منتجات مميزة -->
+    <section class="section hide-on-search" id="featured">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">اختيارات أثر</span>
+            <h2>منتجات مميزة</h2>
+          </div>
+        </div>
+        <div class="grid products-grid" id="featuredGrid"></div>
+      </div>
+    </section>
+
+    <!-- شريط مميزات -->
+    <section class="perks hide-on-search">
+      <div class="container perks-inner">
+        <div class="perk"><strong>توصيل لكل المحافظات</strong><span>خلال 2–5 أيام عمل</span></div>
+        <div class="perk"><strong>الدفع عند الاستلام</strong><span>ادفع لما الطلب يوصلك</span></div>
+        <div class="perk"><strong>خامات مختارة</strong><span>ورق وأحبار عالية الجودة</span></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+  <script>
+    (async () => {
+      Athar.renderLayout();
+      let allProducts = [];
+
+      const offersGrid = document.getElementById('offersGrid');
+      const featuredGrid = document.getElementById('featuredGrid');
+      const categoriesGrid = document.getElementById('categoriesGrid');
+      const searchGrid = document.getElementById('searchGrid');
+
+      offersGrid.innerHTML = Athar.skeletons(4);
+      featuredGrid.innerHTML = Athar.skeletons(4);
+      categoriesGrid.innerHTML = Athar.skeletons(5, 'category');
+
+      // البحث الحي
+      const applySearch = (q) => {
+        q = (q || '').trim().toLowerCase();
+        if (!q) { document.body.classList.remove('is-searching'); return; }
+        document.body.classList.add('is-searching');
+        const res = allProducts.filter(p => p.name.toLowerCase().includes(q));
+        document.getElementById('searchTitle').textContent = `نتائج البحث عن "${q}" (${res.length})`;
+        searchGrid.innerHTML = res.length
+          ? res.map(Athar.productCard).join('')
+          : Athar.emptyState('مفيش منتج بالاسم ده', 'جرّب كلمة تانية أو تصفح الفئات.');
+      };
+      Athar.initSearch(applySearch);
+      document.getElementById('clearSearch').addEventListener('click', () => Athar.setSearch(''));
+
+      try {
+        const [products, categories] = await Promise.all([API.getProducts(), API.getCategories()]);
+        allProducts = products;
+
+        // العروض
+        const offers = products.filter(p => p.hasOffer);
+        document.getElementById('offersCount').textContent = offers.length ? `${offers.length} عرض متاح` : '';
+        offersGrid.innerHTML = offers.length
+          ? offers.map(Athar.productCard).join('')
+          : Athar.emptyState('مفيش عروض حاليًا', 'تابعنا، العروض بتنزل باستمرار.');
+
+        // الفئات
+        categoriesGrid.innerHTML = categories.length
+          ? categories.map(Athar.categoryCard).join('')
+          : Athar.emptyState('مفيش فئات بعد', 'ضيف منتجات في شيت المنتجات.');
+
+        // المميزة (لو مفيش عمود "مميز" مفعّل، نعرض أول 8 منتجات متاحة)
+        let featured = products.filter(p => p.featured);
+        if (!featured.length) featured = products.filter(p => p.available).slice(0, 8);
+        featuredGrid.innerHTML = featured.map(Athar.productCard).join('');
+
+        // لو جاي من صفحة تانية ومعاه ?q=
+        const q = Athar.getInitialQuery();
+        if (q) { Athar.setSearch(q); applySearch(q); }
+      } catch (err) {
+        console.error(err);
+        const msg = Athar.emptyState('تعذّر تحميل المنتجات', 'اتأكد من رابط الـ API في api.js ثم حدّث الصفحة.');
+        offersGrid.innerHTML = msg; featuredGrid.innerHTML = msg; categoriesGrid.innerHTML = msg;
+      }
+    })();
+  </script>
+</body>
+</html>
