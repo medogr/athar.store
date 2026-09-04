@@ -3,7 +3,7 @@
    ========================================================= */
 
 // 👇 حط هنا رابط الـ Web App بعد ما تنشره من Apps Script
-const API_URL = "https://script.google.com/macros/s/AKfycbx-p0h85GQe-Zgufj5DgvvS_6vV_cmTTplzOZ8a57A/dev";
+const API_URL = "https://script.google.com/macros/s/AKfycbxqCnjJtOOgrhZBmnhh8N-kaGKiSke5wPLzyJL0Gxa5nPrHikaQvVqwVDYkLASk_vUI/exec";
 
 const API = (() => {
   const CACHE_KEY = "athar_products_cache";
