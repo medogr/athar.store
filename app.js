@@ -32,9 +32,9 @@ const Athar = (() => {
     if (header) header.innerHTML = `
       <header class="site-header">
         <div class="container header-inner">
-          <a href="index.html" class="logo" aria-label="أثر — الرئيسية">
-            <img src="logo.png" class="logo-img">
-            <img src="logo.png" class="logo-img"><span class="logo-tag">مستلزمات مكتبية بروح</span></span>
+         <a href="index.html" class="logo" aria-label="أثر — الرئيسية">
+            <span class="logo-mark">أ</span>
+            <span><span class="logo-word">أثر</span><span class="logo-tag">مستلزمات مكتبية بروح</span></span>
           </a>
           <button class="menu-toggle" id="menuToggle" aria-label="القائمة">☰</button>
           <nav class="nav" id="mainNav">
