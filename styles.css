@@ -443,6 +443,4 @@ body.is-searching .hide-on-search{display:none}
   .admin-bar-actions{margin-inline-start:auto}
   .tool-input{min-width:0;width:100%}
   .modal .field-row{grid-template-columns:1fr}
-   .logo-img{height:16px;width:auto;object-fit:contain}
-.site-footer .logo-img{height:15px}
 }
